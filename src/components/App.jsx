@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './Button/Button';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Loader } from './Loader/Loader';
@@ -8,83 +8,66 @@ import { GlobalStyle } from './GlobalStyle';
 import { AppStyled } from './App.styled';
 import { ImageSearch } from './ImageSearch';
 
-export class App extends Component {
-  state = {
-    images: [],
-    searchQuery: '',
-    page: 1,
-    largeImageUrl: '',
-    error: false,
-    isLoading: false,
-    showModal: false,
-    shouldScroll: false,
-  };
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [largeImageURL, setLargeImageURL] = useState('');
+  const [error, setError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-  componentDidUpdate = async (prevProps, prevState) => {
-    const prevQuery = prevState.searchQuery;
-    const nextQuery = this.state.searchQuery;
-    if (prevQuery !== nextQuery || prevState.page !== this.state.page) {
-      this.fetchImages();
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        setIsLoading(true);
+        const img = await ImageSearch(searchQuery, page);
+
+        setImages(prevImages => [...prevImages, ...img]);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (!searchQuery) {
+      return;
     }
+    setIsLoading(true);
+    fetchImages(searchQuery, page);
+  }, [searchQuery, page]);
+
+  const handleSearchFormSubmit = searchQuery => {
+    setSearchQuery(searchQuery);
+    setImages([]);
+    setPage(1);
   };
 
-  fetchImages = async () => {
-    try {
-      const { searchQuery, page } = this.state;
-      this.setState({ isLoading: true });
-      const img = await ImageSearch(searchQuery, page);
-      this.setState(prevState => ({
-        images: [...prevState.images, ...img],
-        isLoading: false,
-        error: false,
-      }));
-    } catch (error) {
-      this.setState({ error: true, isLoading: false });
-    }
+  const toggleModalImg = largeImageURL => {
+    setLargeImageURL(largeImageURL);
+    setShowModal(!showModal);
   };
 
-  handleSearchFormSubmit = query => {
-    if (this.state.searchQuery !== query) {
-      this.setState({
-        searchQuery: query,
-        page: 1,
-        images: [],
-      });
-    }
+  const handleButton = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  toggleModalImg = largeImageUrl => {
-    this.setState({ largeImageUrl: largeImageUrl });
-    this.setState({ shouldScroll: false });
-    this.setState({ showModal: !this.state.showModal });
-  };
-
-  handleButton = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
-  };
-
-  render() {
-    const { images, isLoading, error, showModal, largeImageUrl } = this.state;
-
-    return (
-      <AppStyled>
-        <Searchbar onSubmit={this.handleSearchFormSubmit}></Searchbar>
-        {images.length > 0 && (
-          <ImageGallery
-            images={images}
-            onClose={this.toggleModalImg}
-          ></ImageGallery>
-        )}
-        {showModal && (
-          <Modal onClose={this.toggleModalImg} largeImageUrl={largeImageUrl} />
-        )}
-        {images.length > 0 && !isLoading && (
-          <Button type="button" onClick={this.handleButton}></Button>
-        )}
-        {isLoading && <Loader />}
-        {error && <p>Something went wrong</p>}
-        <GlobalStyle></GlobalStyle>
-      </AppStyled>
-    );
-  }
-}
+  return (
+    <AppStyled>
+      <Searchbar onSubmit={handleSearchFormSubmit}></Searchbar>
+      {images.length > 0 && (
+        <ImageGallery images={images} onClose={toggleModalImg}></ImageGallery>
+      )}
+      {showModal && (
+        <Modal onClose={toggleModalImg} largeImageURL={largeImageURL} />
+      )}
+      {images.length > 0 && !isLoading && (
+        <Button type="button" onClick={handleButton}></Button>
+      )}
+      {isLoading && <Loader />}
+      {error && <p>Something went wrong</p>}
+      <GlobalStyle></GlobalStyle>
+    </AppStyled>
+  );
+};

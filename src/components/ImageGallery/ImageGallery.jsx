@@ -1,30 +1,25 @@
-import { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ImageGalleryStyled } from './ImageGallery.styled';
 import { ImageGalleryItem } from 'components/ImageGalleryItem/ImageGalleryItem';
 
-export class ImageGallery extends Component {
-  handleClick = largeImageURL => {
-    this.props.onClose(largeImageURL);
+export const ImageGallery = ({ images, onClose }) => {
+  const handleClick = largeImageURL => {
+    onClose(largeImageURL);
   };
+  return (
+    <ImageGalleryStyled>
+      {images.map(({ id, webformatURL, largeImageURL }) => (
+        <ImageGalleryItem
+          key={id}
+          id={id}
+          imageUrl={webformatURL}
+          onClick={() => handleClick(largeImageURL)}
+        />
+      ))}
+    </ImageGalleryStyled>
+  );
+};
 
-  render() {
-    const { images } = this.props;
-
-    return (
-      <ImageGalleryStyled>
-        {images.map(({ id, webformatURL, largeImageURL }) => (
-          <ImageGalleryItem
-            key={id}
-            id={id}
-            imageUrl={webformatURL}
-            onClick={() => this.handleClick(largeImageURL)}
-          />
-        ))}
-      </ImageGalleryStyled>
-    );
-  }
-}
 ImageGallery.propTypes = {
   images: PropTypes.arrayOf(
     PropTypes.shape({

@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { ImSearch } from 'react-icons/im';
 import PropTypes from 'prop-types';
@@ -9,42 +9,38 @@ import {
   SearchFormInput,
 } from './Searchbar.styled';
 
-export class Searchbar extends Component {
-  state = { value: '' };
+export const Searchbar = ({ onSubmit }) => {
+  const [value, setValue] = useState('');
 
-  handleChange = event => {
-    this.setState({ value: event.target.value });
-  };
-
-  handleSubmit = event => {
+  const handleSubmit = event => {
     event.preventDefault();
-    if (this.state.value.trim() === '') {
-      toast.error('Please enter your search query');
-      return;
+    if (value.trim() === '') {
+      return toast.error('Please enter your search query');
     }
-    this.props.onSubmit(this.state.value);
+    onSubmit(value);
     event.target.reset();
   };
 
-  render() {
-    return (
-      <SearchBarStyled>
-        <SearchForm onSubmit={this.handleSubmit}>
-          <SearchFormButton type="submit">
-            <ImSearch />
-          </SearchFormButton>
+  const handleChange = event => {
+    setValue(event.target.value);
+  };
 
-          <SearchFormInput
-            type="text"
-            value={this.state.value}
-            onChange={this.handleChange}
-            placeholder="Search images and photos"
-          />
-        </SearchForm>
-        <Toaster position="top-right" />
-      </SearchBarStyled>
-    );
-  }
-}
+  return (
+    <SearchBarStyled>
+      <SearchForm onSubmit={handleSubmit}>
+        <SearchFormButton type="submit">
+          <ImSearch />
+        </SearchFormButton>
+        <SearchFormInput
+          type="text"
+          value={value}
+          onChange={handleChange}
+          placeholder="Search images and photos"
+        />
+      </SearchForm>
+      <Toaster position="top-right" />
+    </SearchBarStyled>
+  );
+};
 
 Searchbar.propTypes = { onSubmit: PropTypes.func.isRequired };
